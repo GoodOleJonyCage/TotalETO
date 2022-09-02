@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Hosting;
@@ -40,27 +41,42 @@ namespace TotalETO.Controllers
                                             string? productCategory = "",
                                             string? productDescription = "",
 
-                                            //Dictionary<string, int> productCategoryDic = null,
-                                            //Dictionary<string, int> productDescriptionDic = null,
-
                                             SortValue? nameSort = SortValue.Default,
                                             SortValue? productNumSort = SortValue.Default,
                                             SortValue? costSort = SortValue.Default,
                                             SortValue? weightSort = SortValue.Default,
-                                            SortValue? modifiedDateSort = SortValue.Default  
+                                            SortValue? modifiedDateSort = SortValue.Default  ,
+
+                                            int? pageNumber = 1
                                             
                                         )
         {
-            List<ProductCatalog> lst = new List<ProductCatalog>();
+            List<ProductCatalog> productList = new List<ProductCatalog>();
 
             const int NUMBER_OF_ITEMS_ON_PAGE = 10;
-            int currentPage = 1;
+            int currentPage = pageNumber.HasValue ? pageNumber.Value : 1; 
             int totalCount;
             int totalpages;
 
             using (var dbcontext = new AdventureWorks2019Context())
             {
-                var nonFilteredList = (from p in dbcontext.Products
+
+                # region check productCategory and productDescription for valid values
+
+                //is valid productCategory
+                if ( !string.IsNullOrEmpty(productCategory) && !dbcontext.ProductCategories.Any( x => x.Name.ToLower() == productCategory.ToLower()))
+                {
+                    return BadRequest("Invalid productCategory value");
+                }
+                //is valid productDescription
+                if (!string.IsNullOrEmpty(productDescription) && !dbcontext.ProductDescriptions.Any(x => x.Description.ToLower() == productDescription.ToLower()))
+                {
+                    return BadRequest("Invalid productDescription value");
+                }
+
+                #endregion 
+
+                var nonPagedList = (from p in dbcontext.Products
                                        join ppp in dbcontext.ProductProductPhotos on p.ProductId equals ppp.ProductId
                                        join pp in dbcontext.ProductPhotos on ppp.ProductPhotoId equals pp.ProductPhotoId
                                        join pm in dbcontext.ProductModels on p.ProductModelId equals pm.ProductModelId
@@ -80,30 +96,34 @@ namespace TotalETO.Controllers
                                              )
                                        select new { p, pd, pc, pp }
                         )
-                       //.Skip(NUMBER_OF_ITEMS_ON_PAGE * currentPage)
-                       //.Take(NUMBER_OF_ITEMS_ON_PAGE)
                        .ToList();
 
-                //pagination  
-                totalCount = nonFilteredList.Count;
-                totalpages = nonFilteredList.Count/ NUMBER_OF_ITEMS_ON_PAGE;
-                nonFilteredList = nonFilteredList
+                # region pagination
+                totalCount = nonPagedList.Count;
+                totalpages = nonPagedList.Count/ NUMBER_OF_ITEMS_ON_PAGE;
+                //check for valid page number
+                if (currentPage > totalpages)
+                {
+                    return BadRequest("Invalid pageNumber value");
+                }
+                
+                var pagedList = nonPagedList
                                     .Skip(NUMBER_OF_ITEMS_ON_PAGE * currentPage)
                                     .Take(NUMBER_OF_ITEMS_ON_PAGE).ToList();
-
+                #endregion 
 
                 #region sorting
-
+                var sortedList = pagedList.ToList();
                 //name
                 switch (nameSort)
                 {
                     case SortValue.Ascending:
 
-                        nonFilteredList = nonFilteredList.OrderBy(x => x.p.Name).ToList();
+                        sortedList = pagedList.OrderBy(x => x.p.Name).ToList();
                         break;
 
                     case SortValue.Descending:
-                        nonFilteredList = nonFilteredList.OrderByDescending(x => x.p.Name).ToList();
+                        sortedList = pagedList.OrderByDescending(x => x.p.Name).ToList();
                         break;
                 }
 
@@ -113,11 +133,11 @@ namespace TotalETO.Controllers
                 {
                     case SortValue.Ascending:
 
-                        nonFilteredList = nonFilteredList.OrderBy(x => x.p.ProductNumber).ToList();
+                        sortedList = pagedList.OrderBy(x => x.p.ProductNumber).ToList();
                         break;
 
                     case SortValue.Descending:
-                        nonFilteredList = nonFilteredList.OrderByDescending(x => x.p.ProductNumber).ToList();
+                        sortedList = pagedList.OrderByDescending(x => x.p.ProductNumber).ToList();
                         break;
                 }
 
@@ -126,11 +146,11 @@ namespace TotalETO.Controllers
                 {
                     case SortValue.Ascending:
 
-                        nonFilteredList = nonFilteredList.OrderBy(x => x.p.StandardCost).ToList();
+                        sortedList = pagedList.OrderBy(x => x.p.StandardCost).ToList();
                         break;
 
                     case SortValue.Descending:
-                        nonFilteredList = nonFilteredList.OrderByDescending(x => x.p.StandardCost).ToList();
+                        sortedList = pagedList.OrderByDescending(x => x.p.StandardCost).ToList();
                         break;
                 }
 
@@ -139,11 +159,11 @@ namespace TotalETO.Controllers
                 {
                     case SortValue.Ascending:
 
-                        nonFilteredList = nonFilteredList.OrderBy(x => x.p.Weight).ToList();
+                        sortedList = pagedList.OrderBy(x => x.p.Weight).ToList();
                         break;
 
                     case SortValue.Descending:
-                        nonFilteredList = nonFilteredList.OrderByDescending(x => x.p.Weight).ToList();
+                        sortedList = pagedList.OrderByDescending(x => x.p.Weight).ToList();
                         break;
                 }
 
@@ -152,19 +172,20 @@ namespace TotalETO.Controllers
                 {
                     case SortValue.Ascending:
 
-                        nonFilteredList = nonFilteredList.OrderBy(x => x.p.ModifiedDate).ToList();
+                        sortedList = pagedList.OrderBy(x => x.p.ModifiedDate).ToList();
                         break;
 
                     case SortValue.Descending:
-                        nonFilteredList = nonFilteredList.OrderByDescending(x => x.p.ModifiedDate).ToList();
+                        sortedList = pagedList.OrderByDescending(x => x.p.ModifiedDate).ToList();
                         break;
                 }
 
                 #endregion 
 
-                nonFilteredList.ForEach(x =>
+                //creating client viewmodel
+                sortedList.ForEach(x =>
                 {
-                    lst.Add(new ProductCatalog()
+                    productList.Add(new ProductCatalog()
                     {
                         Category = x.pc.Name,                           //product category
                         Description = x.pd.Description,                 //product description
@@ -180,10 +201,11 @@ namespace TotalETO.Controllers
                 pageSize = NUMBER_OF_ITEMS_ON_PAGE,
                 totalCount = totalCount,
                 totalPages = totalpages,
-                Products = lst
+                Products = productList
             };
 
             return Ok(ProdCatalog);
+            
         }
 
     }
