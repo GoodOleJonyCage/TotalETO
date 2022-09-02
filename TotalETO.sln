@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32825.248
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TotalETO", "TotalETO\TotalETO.csproj", "{850A0D4E-FEFB-4F0E-BCF4-D42354EC1B0F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{850A0D4E-FEFB-4F0E-BCF4-D42354EC1B0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{850A0D4E-FEFB-4F0E-BCF4-D42354EC1B0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{850A0D4E-FEFB-4F0E-BCF4-D42354EC1B0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{850A0D4E-FEFB-4F0E-BCF4-D42354EC1B0F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {24EA9F2A-5775-4961-9164-0772CEF0FFA9}
+	EndGlobalSection
+EndGlobal
