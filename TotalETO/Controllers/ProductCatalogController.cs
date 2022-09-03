@@ -31,7 +31,7 @@ namespace TotalETO.Controllers
     public class ProductCatalogController : ControllerBase
     {
         [HttpGet(Name = "GetProductCatalog")]
-        //[Route("ProductCatalogs/filter/{name?}/{productNum?}")]
+        //[Route("GetProductCatalog/filter/{name?}/{productNum?}/{cost?}/{weight?}/{modifiedDate?}/{productCategory?}/{productDescription?}")]
         public IActionResult Get(
                                             string? name = "",
                                             string? productNum = "",
@@ -46,14 +46,16 @@ namespace TotalETO.Controllers
                                             SortValue? costSort = SortValue.Default,
                                             SortValue? weightSort = SortValue.Default,
                                             SortValue? modifiedDateSort = SortValue.Default  ,
+                                            SortValue? productcategorySort = SortValue.Default,
 
-                                            int? pageNumber = 1
-                                            
+                                            int? pageNumber = 1,
+                                            int? pageSize = 10
+
                                         )
         {
             List<ProductCatalog> productList = new List<ProductCatalog>();
 
-            const int NUMBER_OF_ITEMS_ON_PAGE = 10;
+            int NUMBER_OF_ITEMS_ON_PAGE = pageSize.Value;
             int currentPage = pageNumber.HasValue ? pageNumber.Value : 1; 
             int totalCount;
             int totalpages;
@@ -102,6 +104,10 @@ namespace TotalETO.Controllers
                 totalCount = nonPagedList.Count;
                 totalpages = nonPagedList.Count/ NUMBER_OF_ITEMS_ON_PAGE;
                 //check for valid page number
+                if(NUMBER_OF_ITEMS_ON_PAGE > nonPagedList.Count)
+                {
+                    return BadRequest("Invalid pageSize value");
+                }
                 if (currentPage > totalpages)
                 {
                     return BadRequest("Invalid pageNumber value");
@@ -180,6 +186,21 @@ namespace TotalETO.Controllers
                         break;
                 }
 
+                //productcategory
+                switch (productcategorySort)
+                {
+                    case SortValue.Ascending:
+
+                        sortedList = pagedList.OrderBy(x => x.pc.Name).ToList();
+                        break;
+
+                    case SortValue.Descending:
+                        sortedList = pagedList.OrderByDescending(x => x.pc.Name).ToList();
+                        break;
+                }
+
+
+
                 #endregion 
 
                 //creating client viewmodel
@@ -194,6 +215,7 @@ namespace TotalETO.Controllers
                 });
             }
 
+            
 
             var ProdCatalog = new
             {
