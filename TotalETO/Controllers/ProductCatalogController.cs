@@ -57,8 +57,8 @@ namespace TotalETO.Controllers
 
             int NUMBER_OF_ITEMS_ON_PAGE = pageSize.Value;
             int currentPage = pageNumber.HasValue ? pageNumber.Value : 1; 
-            int totalCount;
-            int totalpages;
+            int totalCount = 0 ;
+            int totalpages = 0;
 
             using (var dbcontext = new AdventureWorks2019Context())
             {
@@ -100,122 +100,124 @@ namespace TotalETO.Controllers
                         )
                        .ToList();
 
-                # region pagination
-                totalCount = nonPagedList.Count;
-                totalpages = nonPagedList.Count/ NUMBER_OF_ITEMS_ON_PAGE;
-                //check for valid page number
-                if(NUMBER_OF_ITEMS_ON_PAGE > nonPagedList.Count)
+
+                if (nonPagedList.Count > 0)
                 {
-                    return BadRequest("Invalid pageSize value");
-                }
-                if (currentPage > totalpages)
-                {
-                    return BadRequest("Invalid pageNumber value");
-                }
-                
-                var pagedList = nonPagedList
-                                    .Skip(NUMBER_OF_ITEMS_ON_PAGE * currentPage)
-                                    .Take(NUMBER_OF_ITEMS_ON_PAGE).ToList();
-                #endregion 
-
-                #region sorting
-                var sortedList = pagedList.ToList();
-                //name
-                switch (nameSort)
-                {
-                    case SortValue.Ascending:
-
-                        sortedList = pagedList.OrderBy(x => x.p.Name).ToList();
-                        break;
-
-                    case SortValue.Descending:
-                        sortedList = pagedList.OrderByDescending(x => x.p.Name).ToList();
-                        break;
-                }
-
-
-                //product num
-                switch (productNumSort)
-                {
-                    case SortValue.Ascending:
-
-                        sortedList = pagedList.OrderBy(x => x.p.ProductNumber).ToList();
-                        break;
-
-                    case SortValue.Descending:
-                        sortedList = pagedList.OrderByDescending(x => x.p.ProductNumber).ToList();
-                        break;
-                }
-
-                //cost
-                switch (costSort)
-                {
-                    case SortValue.Ascending:
-
-                        sortedList = pagedList.OrderBy(x => x.p.StandardCost).ToList();
-                        break;
-
-                    case SortValue.Descending:
-                        sortedList = pagedList.OrderByDescending(x => x.p.StandardCost).ToList();
-                        break;
-                }
-
-                //weightSort
-                switch (weightSort)
-                {
-                    case SortValue.Ascending:
-
-                        sortedList = pagedList.OrderBy(x => x.p.Weight).ToList();
-                        break;
-
-                    case SortValue.Descending:
-                        sortedList = pagedList.OrderByDescending(x => x.p.Weight).ToList();
-                        break;
-                }
-
-                //modifiedDateSort
-                switch (modifiedDateSort)
-                {
-                    case SortValue.Ascending:
-
-                        sortedList = pagedList.OrderBy(x => x.p.ModifiedDate).ToList();
-                        break;
-
-                    case SortValue.Descending:
-                        sortedList = pagedList.OrderByDescending(x => x.p.ModifiedDate).ToList();
-                        break;
-                }
-
-                //productcategory
-                switch (productcategorySort)
-                {
-                    case SortValue.Ascending:
-
-                        sortedList = pagedList.OrderBy(x => x.pc.Name).ToList();
-                        break;
-
-                    case SortValue.Descending:
-                        sortedList = pagedList.OrderByDescending(x => x.pc.Name).ToList();
-                        break;
-                }
-
-
-
-                #endregion 
-
-                //creating client viewmodel
-                sortedList.ForEach(x =>
-                {
-                    productList.Add(new ProductCatalog()
+                    #region pagination
+                    if (NUMBER_OF_ITEMS_ON_PAGE <= 0)
                     {
-                        Category = x.pc.Name,                           //product category
-                        Description = x.pd.Description,                 //product description
-                        Photo = x.pp.ThumbnailPhotoFileName ?? "N/A"    //product photo
-                    });
-                });
-            }
+                        return BadRequest("Invalid pageSize value");
+                    }
+                    totalCount = nonPagedList.Count;
+                    totalpages = nonPagedList.Count <= NUMBER_OF_ITEMS_ON_PAGE ?  1 : nonPagedList.Count / NUMBER_OF_ITEMS_ON_PAGE;
+                    //check for valid page number
+                    if (currentPage > totalpages)
+                    {
+                        return BadRequest("Invalid pageNumber value");
+                    }
 
-            
+                    var pagedList = nonPagedList
+                                        .Skip(NUMBER_OF_ITEMS_ON_PAGE * currentPage)
+                                        .Take(NUMBER_OF_ITEMS_ON_PAGE).ToList();
+                    #endregion
+
+                    #region sorting
+                    var sortedList = pagedList.ToList();
+                    //name
+                    switch (nameSort)
+                    {
+                        case SortValue.Ascending:
+
+                            sortedList = pagedList.OrderBy(x => x.p.Name).ToList();
+                            break;
+
+                        case SortValue.Descending:
+                            sortedList = pagedList.OrderByDescending(x => x.p.Name).ToList();
+                            break;
+                    }
+
+
+                    //product num
+                    switch (productNumSort)
+                    {
+                        case SortValue.Ascending:
+
+                            sortedList = pagedList.OrderBy(x => x.p.ProductNumber).ToList();
+                            break;
+
+                        case SortValue.Descending:
+                            sortedList = pagedList.OrderByDescending(x => x.p.ProductNumber).ToList();
+                            break;
+                    }
+
+                    //cost
+                    switch (costSort)
+                    {
+                        case SortValue.Ascending:
+
+                            sortedList = pagedList.OrderBy(x => x.p.StandardCost).ToList();
+                            break;
+
+                        case SortValue.Descending:
+                            sortedList = pagedList.OrderByDescending(x => x.p.StandardCost).ToList();
+                            break;
+                    }
+
+                    //weightSort
+                    switch (weightSort)
+                    {
+                        case SortValue.Ascending:
+
+                            sortedList = pagedList.OrderBy(x => x.p.Weight).ToList();
+                            break;
+
+                        case SortValue.Descending:
+                            sortedList = pagedList.OrderByDescending(x => x.p.Weight).ToList();
+                            break;
+                    }
+
+                    //modifiedDateSort
+                    switch (modifiedDateSort)
+                    {
+                        case SortValue.Ascending:
+
+                            sortedList = pagedList.OrderBy(x => x.p.ModifiedDate).ToList();
+                            break;
+
+                        case SortValue.Descending:
+                            sortedList = pagedList.OrderByDescending(x => x.p.ModifiedDate).ToList();
+                            break;
+                    }
+
+                    //productcategory
+                    switch (productcategorySort)
+                    {
+                        case SortValue.Ascending:
+
+                            sortedList = pagedList.OrderBy(x => x.pc.Name).ToList();
+                            break;
+
+                        case SortValue.Descending:
+                            sortedList = pagedList.OrderByDescending(x => x.pc.Name).ToList();
+                            break;
+                    }
+
+
+
+                    #endregion
+
+                    //creating client viewmodel
+                    sortedList.ForEach(x =>
+                    {
+                        productList.Add(new ProductCatalog()
+                        {
+                            Category = x.pc.Name,                           //product category
+                            Description = x.pd.Description,                 //product description
+                            Photo = x.pp.ThumbnailPhotoFileName ?? "N/A"    //product photo
+                        });
+                    });
+                }
+            }
 
             var ProdCatalog = new
             {
